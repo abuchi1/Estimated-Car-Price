@@ -1,35 +1,70 @@
-name: Build and deploy to GitHub Pages
+name: 🚀 Auto Build & Deploy to GitHub Pages
 
 on:
   push:
     branches:
-      - main
+      - main    # 🔹 Mỗi lần bạn push code lên main, workflow sẽ chạy
 
-permissions:          # 🔹 thêm dòng này để cấp quyền ghi
+permissions:
   contents: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
+      # 1️⃣ Lấy code mới nhất
+      - name: 🧾 Checkout repository
         uses: actions/checkout@v4
 
-      - name: Use Node.js
+      # 2️⃣ Cache thư mục node_modules để build nhanh hơn
+      - name: ⚡ Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # 3️⃣ Setup Node.js
+      - name: 🧩 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
+          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm i
+      # 4️⃣ Cài dependencies
+      - name: 📦 Install dependencies
+        run: npm ci
 
-      - name: Build
+      # 5️⃣ Kiểm tra thay đổi trong thư mục src để tránh build không cần thiết
+      - name: 🔍 Check for source code changes
+        id: changes
+        run: |
+          git fetch origin gh-pages || true
+          git diff --quiet origin/gh-pages -- src/ || echo "changed" > changes.flag
+          if [ -f changes.flag ]; then
+            echo "src_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "src_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      # 6️⃣ Build chỉ khi có thay đổi
+      - name: 🏗️ Build project
+        if: steps.changes.outputs.src_changed == 'true'
         run: npm run build
 
-      - name: Deploy to GitHub Pages
+      # 7️⃣ Deploy (nếu có thay đổi)
+      - name: 🌐 Deploy to GitHub Pages
+        if: steps.changes.outputs.src_changed == 'true'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist       # 🔹 đổi từ build → dist
-          publish_branch: gh-pages  # nhánh chứa website
-          enable_jekyll: false   
+          publish_branch: gh-pages
+          publish_dir: ./dist
+          enable_jekyll: false
+
+      # 8️⃣ Thông báo khi không có thay đổi
+      - name: ✅ Skip deploy (no src changes)
+        if: steps.changes.outputs.src_changed == 'false'
+        run: echo "⏩ No changes in src/, skipping build and deploy."
