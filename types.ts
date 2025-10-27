@@ -1,5 +1,6 @@
 export interface FormData {
-  brandAndModel: string;
+  brand: string;
+  model: string;
   year: string;
   kms: string;
 }
@@ -17,4 +18,8 @@ export interface ValuationResult {
   estimatedPrice: string;
   analysis: string;
   sources: GroundingSource[];
+  // New fields for detailed breakdown
+  basePrice?: string;
+  mileageAdjustment?: string;
+  yearAdjustment?: string;
 }

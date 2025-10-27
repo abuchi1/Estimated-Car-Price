@@ -7,30 +7,41 @@ if (!process.env.API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-export const estimateCarPrice = async (formData: FormData): Promise<ValuationResult> => {
-  const { brandAndModel, year, kms } = formData;
+export const estimateCarPrice = async (formData: Omit<FormData, 'condition'>): Promise<ValuationResult> => {
+  const { brand, model, year, kms } = formData;
 
   const prompt = `
-    Với vai trò là một chuyên gia định giá xe của một công ty bảo hiểm hàng đầu tại Việt Nam, hãy phân tích và xác định giá trị tham chiếu của chiếc xe sau đây để phục vụ cho mục đích bảo hiểm.
+    Với vai trò là một chuyên gia định giá xe chuyên nghiệp tại Việt Nam, hãy thực hiện một phân tích chi tiết và đưa ra ước tính giá trị cho chiếc xe sau. Phân tích của bạn phải logic, dựa trên dữ liệu và tuân thủ nghiêm ngặt định dạng đầu ra.
 
-    Giá trị này sẽ được dùng làm cơ sở để tính phí bảo hiểm vật chất (bảo hiểm thân vỏ) và xác định số tiền bồi thường tối đa trong trường hợp xe bị tổn thất toàn bộ.
-
-    Thông tin xe:
-    - Hãng xe và Mẫu xe: ${brandAndModel}
+    **Thông tin xe:**
+    - Hãng xe: ${brand}
+    - Mẫu xe: ${model}
     - Năm sản xuất: ${year}
     - Số km đã đi: ${kms} km
 
-    Yêu cầu định giá:
-    1.  **Xác định giá trị tham chiếu:** Cung cấp một khoảng giá trị hợp lý và một giá trị dự kiến cụ thể để làm cơ sở tính phí bảo hiểm. Hãy tập trung vào giá trị thực của xe dựa trên khấu hao theo thời gian, tình trạng (qua số km), và giá trị xe mới tương đương (nếu có). Bỏ qua các yếu-tố mang tính thời điểm như "độ hot" của dòng xe, nhu cầu thị trường ngắn hạn, hay khả năng bán nhanh.
-    2.  **Sử dụng Google Search:** Nghiên cứu giá niêm yết của xe mới và giá trị xe đã qua sử dụng trên thị trường để có cơ sở dữ liệu khách quan.
-    3.  **Phân tích các yếu tố:** Trong phần phân tích, hãy giải thích ngắn gọn các yếu tố chính được sử dụng để xác định giá trị xe cho mục đích bảo hiểm, chẳng hạn như khấu hao tiêu chuẩn, chi phí thay thế, và các yếu-tố khác liên quan đến rủi ro.
-    4.  **Trình bày kết quả:** Cung cấp câu trả lời theo định dạng sau. BẮT BUỘC phải tuân thủ định dạng này, chỉ bao gồm các phần này và không thêm bất kỳ định dạng Markdown nào khác (như ### hoặc ***):
-        
-        KHOẢNG GIÁ: [Điền khoảng giá trị tham chiếu của bạn vào đây]
-        
-        GIÁ DỰ KIẾN: [Điền giá trị tham chiếu cụ thể, đây là con số quan trọng nhất cho hợp đồng bảo hiểm]
+    **QUY TRÌNH BẮT BUỘC:**
 
-        PHÂN TÍCH: [Điền phân tích chi tiết của bạn dưới góc độ của một chuyên gia bảo hiểm.]
+    1.  **Nghiên cứu thị trường (Sử dụng Google Search):**
+        *   Tìm giá niêm yết của một chiếc xe **${brand} ${model}** mới tương đương (nếu có).
+        *   Tìm giá rao bán của các xe **${brand} ${model}** đời **${year}** đã qua sử dụng trên các trang uy tín tại Việt Nam. Tập trung vào những xe có số km gần với **${kms} km**. Ghi nhận một khoảng giá tham khảo.
+
+    2.  **Xây dựng lập luận định giá:**
+        *   **Xác định Giá Cơ Sở:** Dựa trên nghiên cứu, hãy xác định một mức "Giá Cơ Sở". Đây là giá trung bình của một chiếc xe tương tự trong điều kiện tiêu chuẩn (tình trạng khá, trung bình so với tuổi đời và số km) trên thị trường xe cũ.
+        *   **Thực hiện điều chỉnh:** Dựa trên Giá Cơ Sở, hãy thực hiện các điều chỉnh tăng/giảm giá. **Quy tắc logic quan trọng:**
+            *   Số km càng cao, giá càng giảm.
+            *   Năm sản xuất càng cũ, giá càng giảm.
+        *   **Tổng hợp:** Tính toán giá cuối cùng sau khi đã áp dụng các điều chỉnh.
+
+    3.  **Định dạng đầu ra (BẮT BUỘC):** Chỉ trả về văn bản thuần túy theo cấu trúc bên dưới. KHÔNG sử dụng Markdown. Mỗi mục phải nằm trên một dòng riêng.
+
+    GIÁ CƠ SỞ: [Giá trị tham khảo từ thị trường xe cũ]
+    ĐIỀU CHỈNH KM (${kms} km): [Số tiền điều chỉnh, ví dụ: - 50 triệu VNĐ hoặc + 10 triệu VNĐ]
+    ĐIỀU CHỈNH ĐỜI XE (${year}): [Số tiền điều chỉnh, ví dụ: - 20 triệu VNĐ]
+    ---
+    KHOẢNG GIÁ: [Điền khoảng giá trị hợp lý sau khi tính toán]
+    GIÁ DỰ KIẾN: [Điền giá trị cuối cùng sau khi đã điều chỉnh]
+    ---
+    PHÂN TÍCH: [Viết một đoạn văn ngắn gọn giải thích quá trình trên. Giải thích tại sao bạn chọn Giá Cơ Sở đó và cơ sở cho các mức điều chỉnh. Luôn luôn giả định xe ở tình trạng trung bình ("Khá") phù hợp với năm sản xuất và số km.]
   `;
 
   try {
@@ -39,19 +50,23 @@ export const estimateCarPrice = async (formData: FormData): Promise<ValuationRes
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
-        temperature: 0.2,
+        temperature: 0.1, // Lower temperature for more deterministic results
       },
     });
 
     const text = response.text;
     
-    // Use regex to parse the structured text response
+    // Use regex to parse the new structured text response
     const priceRangeMatch = text.match(/KHOẢNG GIÁ:\s*(.*)/);
     const estimatedPriceMatch = text.match(/GIÁ DỰ KIẾN:\s*(.*)/);
-    // Use [\s\S] to match across multiple lines for the analysis part
     const analysisMatch = text.match(/PHÂN TÍCH:\s*([\s\S]*)/);
+    
+    // New parsers for the breakdown
+    const basePrice = text.match(/GIÁ CƠ SỞ:\s*(.*)/)?.[1]?.trim();
+    const mileageAdjustment = text.match(/ĐIỀU CHỈNH KM.*:\s*(.*)/)?.[1]?.trim();
+    const yearAdjustment = text.match(/ĐIỀU CHỈNH ĐỜI XE.*:\s*(.*)/)?.[1]?.trim();
 
-    if (!priceRangeMatch || !analysisMatch || !estimatedPriceMatch) {
+    if (!priceRangeMatch || !analysisMatch || !estimatedPriceMatch || !basePrice) {
       console.error("Could not parse Gemini response:", text);
       throw new Error(`Dịch vụ AI đã trả về một định dạng không mong muốn.
 Điều này đôi khi xảy ra với các yêu cầu phức tạp. Vui lòng thử lại.`);
@@ -68,6 +83,9 @@ export const estimateCarPrice = async (formData: FormData): Promise<ValuationRes
       estimatedPrice,
       analysis,
       sources,
+      basePrice,
+      mileageAdjustment,
+      yearAdjustment,
     };
   } catch (error) {
     console.error("Error calling Gemini API:", error);

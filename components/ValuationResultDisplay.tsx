@@ -3,7 +3,7 @@ import { ValuationResult, FormData } from '../types';
 
 interface ValuationResultDisplayProps {
   result: ValuationResult;
-  formData: FormData;
+  formData: Omit<FormData, 'condition'>;
   onReevaluate: () => void;
 }
 
@@ -19,9 +19,12 @@ export const ValuationResultDisplay: React.FC<ValuationResultDisplayProps> = ({ 
       <div className="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Thông tin xe đã nhập:</h3>
         <div className="grid grid-cols-[max-content,1fr] gap-x-8 gap-y-3 items-center">
-          <span className="text-gray-600">Hãng xe và Mẫu xe:</span>
-          <span className="font-bold text-dark text-right uppercase">{formData.brandAndModel}</span>
+          <span className="text-gray-600">Hãng xe:</span>
+          <span className="font-bold text-dark text-right">{formData.brand}</span>
 
+          <span className="text-gray-600">Mẫu xe:</span>
+          <span className="font-bold text-dark text-right">{formData.model}</span>
+          
           <span className="text-gray-600">Năm sản xuất:</span>
           <span className="font-bold text-dark text-right">{formData.year}</span>
 
@@ -36,6 +39,32 @@ export const ValuationResultDisplay: React.FC<ValuationResultDisplayProps> = ({ 
         <h3 className="text-5xl font-extrabold my-2 tracking-tight">{result.estimatedPrice}</h3>
         <p className="text-lg opacity-80 mt-1">Trong khoảng: {result.priceRange}</p>
       </div>
+
+      {/* Calculation Breakdown */}
+      <div className="mb-6">
+        <h3 className="text-xl font-semibold text-dark mb-3">Chi tiết tính toán</h3>
+        <div className="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
+          {result.basePrice && (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Giá tham khảo trung bình:</span>
+              <span className="font-bold text-dark text-right">{result.basePrice}</span>
+            </div>
+          )}
+          {result.mileageAdjustment && (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Điều chỉnh theo số km ({Number(formData.kms).toLocaleString('vi-VN')} km):</span>
+              <span className="font-bold text-right" style={{ color: result.mileageAdjustment.includes('-') ? '#ef4444' : '#22c55e' }}>{result.mileageAdjustment}</span>
+            </div>
+          )}
+          {result.yearAdjustment && (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Điều chỉnh theo năm sản xuất ({formData.year}):</span>
+              <span className="font-bold text-right" style={{ color: result.yearAdjustment.includes('-') ? '#ef4444' : '#22c55e' }}>{result.yearAdjustment}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
 
       {/* Analysis */}
       {result.analysis && (

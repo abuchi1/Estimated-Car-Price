@@ -1,30 +1,57 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { estimateCarPrice } from './services/geminiService';
 import { FormData, ValuationResult } from './types';
 import { InputField } from './components/InputField';
+import { SelectField } from './components/SelectField';
 import { CarIcon } from './components/CarIcon';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ValuationResultDisplay } from './components/ValuationResultDisplay';
+import { CAR_BRANDS, CAR_MODELS_BY_BRAND } from './constants';
 
 const App: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({
-    brandAndModel: '',
+  const [formData, setFormData] = useState<Omit<FormData, 'condition'>>({
+    brand: '',
+    model: '',
     year: '',
     kms: '',
   });
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [isCustomModel, setIsCustomModel] = useState<boolean>(false);
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (formData.brand && CAR_MODELS_BY_BRAND[formData.brand]) {
+      setAvailableModels(CAR_MODELS_BY_BRAND[formData.brand]);
+    } else {
+      setAvailableModels([]);
+    }
+    // Reset model and custom model state when brand changes
+    setFormData(prev => ({ ...prev, model: '' }));
+    setIsCustomModel(false);
+  }, [formData.brand]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   }, []);
 
+  const handleModelSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    if (value === 'Khác...') {
+      setIsCustomModel(true);
+      setFormData(prev => ({ ...prev, model: '' }));
+    } else {
+      setIsCustomModel(false);
+      setFormData(prev => ({ ...prev, model: value }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!formData.brandAndModel || !formData.year || !formData.kms) {
-      setError('Vui lòng điền đầy đủ tất cả các trường thông tin.');
+    if (!formData.brand || !formData.model || !formData.year || !formData.kms) {
+      setError('Vui lòng điền đầy đủ các trường thông tin bắt buộc: Hãng xe, Mẫu xe, Năm sản xuất và Số KM.');
       return;
     }
 
@@ -45,8 +72,10 @@ const App: React.FC = () => {
   const handleReevaluate = useCallback(() => {
     setResult(null);
     setError(null);
+    setIsCustomModel(false);
     setFormData({
-      brandAndModel: '',
+      brand: '',
+      model: '',
       year: '',
       kms: '',
     });
@@ -64,16 +93,39 @@ const App: React.FC = () => {
             </header>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-               <InputField
-                label="Hãng xe và Mẫu xe"
-                name="brandAndModel"
-                type="text"
-                value={formData.brandAndModel}
-                onChange={handleInputChange}
-                placeholder="VD: Toyota Vios 1.5G"
-              />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField
+                <SelectField
+                  label="Hãng xe"
+                  name="brand"
+                  value={formData.brand}
+                  onChange={handleInputChange}
+                  options={['Chọn hãng xe', ...CAR_BRANDS]}
+                  required
+                />
+                <div>
+                  <SelectField
+                    label="Mẫu xe"
+                    name="model-select"
+                    value={isCustomModel ? 'Khác...' : formData.model}
+                    onChange={handleModelSelectChange}
+                    options={formData.brand ? ['Chọn mẫu xe', ...availableModels, 'Khác...'] : ['Vui lòng chọn hãng xe']}
+                    disabled={!formData.brand || availableModels.length === 0}
+                    required
+                  />
+                  {isCustomModel && (
+                    <div className="mt-2">
+                      <InputField
+                        label="Tên mẫu xe (tùy chỉnh)"
+                        name="model"
+                        value={formData.model}
+                        onChange={handleInputChange}
+                        placeholder="VD: Corolla Cross 1.8V"
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
+                 <InputField
                   label="Năm sản xuất"
                   name="year"
                   type="number"
