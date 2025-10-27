@@ -7,19 +7,23 @@ export default defineConfig(({ mode }) => {
   const geminiKey = 'AIzaSyA89K_4mBW9csvMrUAqqkyewPSxCmGF018';
 
   return {
-    base: '/Estimated-Car-Price/',
+    base: '/Estimated-Car-Price/', // 🔹 Quan trọng cho GitHub Pages
+    plugins: [react()],
+    build: {
+      outDir: 'dist', // 🔹 đảm bảo build ra đúng thư mục deploy
+      emptyOutDir: true,
+    },
     server: {
       port: 3000,
       host: '0.0.0.0',
     },
-    plugins: [react()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(geminiKey),
       'process.env.API_KEY': JSON.stringify(geminiKey),
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, 'src'), // 🔹 đổi '.' thành 'src' nếu bạn import theo dạng '@/components/...'
       },
     },
   };
