@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage:"https://abuchi1.github.io/Estimated-Car-Price/",
+  "homepage":"https://abuchi1.github.io/Estimated-Car-Price/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
