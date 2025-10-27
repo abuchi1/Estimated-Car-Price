@@ -1,0 +1,5 @@
+{
+  "name": "AI Car Valuator Vietnam",
+  "description": "An AI-powered application to estimate the market price of used cars in Vietnam based on brand, model, year, and kilometers driven. It uses Gemini with Google Search for up-to-date information.",
+  "requestFramePermissions": []
+}
