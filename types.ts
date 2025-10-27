@@ -1,7 +1,5 @@
-
 export interface FormData {
-  brand: string;
-  model: string;
+  brandAndModel: string;
   year: string;
   kms: string;
 }

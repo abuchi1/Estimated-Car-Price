@@ -1,8 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { estimateCarPrice } from './services/geminiService';
-import { CAR_BRANDS, CAR_MODELS_BY_BRAND } from './constants';
 import { FormData, ValuationResult } from './types';
-import { SelectField } from './components/SelectField';
 import { InputField } from './components/InputField';
 import { CarIcon } from './components/CarIcon';
 import { LoadingSpinner } from './components/LoadingSpinner';
@@ -10,8 +8,7 @@ import { ValuationResultDisplay } from './components/ValuationResultDisplay';
 
 const App: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
-    brand: CAR_BRANDS[0],
-    model: CAR_MODELS_BY_BRAND[CAR_BRANDS[0]][0],
+    brandAndModel: '',
     year: '',
     kms: '',
   });
@@ -21,24 +18,12 @@ const App: React.FC = () => {
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
-    if (name === 'brand') {
-      const newBrand = value;
-      const newModels = CAR_MODELS_BY_BRAND[newBrand] || [];
-      const newModel = newModels[0] || '';
-      setFormData(prev => ({
-        ...prev,
-        brand: newBrand,
-        model: newModel,
-      }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!formData.model || !formData.year || !formData.kms) {
+    if (!formData.brandAndModel || !formData.year || !formData.kms) {
       setError('Vui lòng điền đầy đủ tất cả các trường thông tin.');
       return;
     }
@@ -60,6 +45,11 @@ const App: React.FC = () => {
   const handleReevaluate = useCallback(() => {
     setResult(null);
     setError(null);
+    setFormData({
+      brandAndModel: '',
+      year: '',
+      kms: '',
+    });
   }, []);
 
   return (
@@ -74,21 +64,15 @@ const App: React.FC = () => {
             </header>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+               <InputField
+                label="Hãng xe và Mẫu xe"
+                name="brandAndModel"
+                type="text"
+                value={formData.brandAndModel}
+                onChange={handleInputChange}
+                placeholder="VD: Toyota Vios 1.5G"
+              />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <SelectField
-                  label="Hãng xe"
-                  name="brand"
-                  value={formData.brand}
-                  onChange={handleInputChange}
-                  options={CAR_BRANDS}
-                />
-                <SelectField
-                  label="Mẫu xe"
-                  name="model"
-                  value={formData.model}
-                  onChange={handleInputChange}
-                  options={CAR_MODELS_BY_BRAND[formData.brand] || []}
-                />
                 <InputField
                   label="Năm sản xuất"
                   name="year"

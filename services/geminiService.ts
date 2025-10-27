@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { FormData, ValuationResult, GroundingSource } from '../types';
 
@@ -9,7 +8,7 @@ if (!process.env.API_KEY) {
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const estimateCarPrice = async (formData: FormData): Promise<ValuationResult> => {
-  const { brand, model, year, kms } = formData;
+  const { brandAndModel, year, kms } = formData;
 
   const prompt = `
     Với vai trò là một chuyên gia định giá xe của một công ty bảo hiểm hàng đầu tại Việt Nam, hãy phân tích và xác định giá trị tham chiếu của chiếc xe sau đây để phục vụ cho mục đích bảo hiểm.
@@ -17,8 +16,7 @@ export const estimateCarPrice = async (formData: FormData): Promise<ValuationRes
     Giá trị này sẽ được dùng làm cơ sở để tính phí bảo hiểm vật chất (bảo hiểm thân vỏ) và xác định số tiền bồi thường tối đa trong trường hợp xe bị tổn thất toàn bộ.
 
     Thông tin xe:
-    - Hãng xe: ${brand}
-    - Dòng xe và phiên bản: ${model}
+    - Hãng xe và Mẫu xe: ${brandAndModel}
     - Năm sản xuất: ${year}
     - Số km đã đi: ${kms} km
 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ValuationResult, FormData } from '../types';
 
@@ -20,11 +19,8 @@ export const ValuationResultDisplay: React.FC<ValuationResultDisplayProps> = ({ 
       <div className="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Thông tin xe đã nhập:</h3>
         <div className="grid grid-cols-[max-content,1fr] gap-x-8 gap-y-3 items-center">
-          <span className="text-gray-600">Hãng xe:</span>
-          <span className="font-bold text-dark text-right uppercase">{formData.brand}</span>
-
-          <span className="text-gray-600">Hiệu xe:</span>
-          <span className="font-bold text-dark text-right uppercase">{formData.model}</span>
+          <span className="text-gray-600">Hãng xe và Mẫu xe:</span>
+          <span className="font-bold text-dark text-right uppercase">{formData.brandAndModel}</span>
 
           <span className="text-gray-600">Năm sản xuất:</span>
           <span className="font-bold text-dark text-right">{formData.year}</span>
